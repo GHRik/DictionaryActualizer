@@ -4,6 +4,9 @@ import SjpWrapper
 import sys
 import time
 import subprocess
+import multiprocessing
+
+ACTUAL_DICT = ""
 
 def splitDictionariesBySimilaryAndDifference( pfsPath , sjpPath ):
     parsedPFS = FileUtils.getParsePFSDictionaryFile(pfsPath)
@@ -20,29 +23,33 @@ def modifyDictionaryPlace( myDict ):
     return newDict
 
 
+def worker( line ):
+    word = line
+    word = word.rstrip('\n')
+    webiste = "https://www.sjp.pl/"
+    https = webiste+word
+    payload = CurlReader.readCurl(https)
+    payload = payload.replace("\n"," ")
+    myJson = SjpWrapper.wrapCurl(payload)
+    myJson["name"] = word
+    myJson = modifyDictionaryPlace(myJson)
+    FileUtils.printJSONToFile(myJson,ACTUAL_DICT)
+
 def fillDictionary( dictionaryName ):
     FileUtils.truncJsonFile(dictionaryName)
+    ACTUAL_DICT = dictionaryName
     a_file = open("Output/"+dictionaryName,"r", encoding="utf8")
     lines = a_file.readlines()
-    webiste = "https://www.sjp.pl/"
     print("\nProcessing",dictionaryName," : ...")
     start = time.time()
-    for line in lines:
-        word = line
-        word = word.rstrip('\n')
-        https = webiste+word
-        payload = CurlReader.readCurl(https)
-        payload = payload.replace("\n"," ")
-        myJson = SjpWrapper.wrapCurl(payload)
-        myJson["name"] = word
-        myJson = modifyDictionaryPlace(myJson)
-        FileUtils.printJSONToFile(myJson,dictionaryName)
+    pool.map( worker,(lines[x] for x in range(0,len(lines))) )
     end = time.time()
     during = end - start
     print("Fill ",dictionaryName,"\ntakes time: ",during)
 
 if __name__ == '__main__':
 
+    pool = multiprocessing.Pool(processes=8)
     if CurlReader.testSjpSite() == False:
         print("Problem with sjp site, check connection to sjp.pl")
     else:
