@@ -102,6 +102,41 @@ python3> DictionaryActualizer.py sjp.txt pfs.txt
 And after all check Output folder.
 You will see a examples :D
 
+
+This is output from examples:
+```
+C:\Users\rik13\Desktop\DictionaryActualizer>python DictionaryActualizer.py sjp.txt pfs.txt
+Start to process lines:
+sjp: 155  lines
+pfs: 117  lines
+
+Splitted dictionaries on:
+Same in two dictionaries:  68 lines
+Unique in sjp dict:  88  lines
+Unique in pfs dict:  45  lines
+
+Processing pfsUnique.txt  : ...
+Fill  pfsUnique.txt
+takes time:  22.43681049346924
+
+Processing same.txt  : ...
+Fill  same.txt
+takes time:  33.13961362838745
+
+Processing sjpUnique.txt  : ...
+Fill  sjpUnique.txt
+takes time:  47.09232306480408
+
+C:\Users\rik13\Desktop\DictionaryActualizer>python DictionaryActualizer.py sjp.txt
+Start to process lines:  155
+
+Processing sjp.txt  : ...
+Fill  sjp.txt
+takes time:  81.83865451812744
+
+C:\Users\rik13\Desktop\DictionaryActualizer>
+```
+
 <a name="lic">.</a>
 ## License
 Apache

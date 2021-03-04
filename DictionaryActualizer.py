@@ -2,6 +2,8 @@ import FileUtils
 import CurlReader
 import SjpWrapper
 import sys
+import time
+import subprocess
 
 def splitDictionariesBySimilaryAndDifference( pfsPath , sjpPath ):
     parsedPFS = FileUtils.getParsePFSDictionaryFile(pfsPath)
@@ -19,10 +21,12 @@ def modifyDictionaryPlace( myDict ):
 
 
 def fillDictionary( dictionaryName ):
-    a_file = open("Input/"+dictionaryName,"r", encoding="utf8")
+    FileUtils.truncJsonFile(dictionaryName)
+    a_file = open("Output/"+dictionaryName,"r", encoding="utf8")
     lines = a_file.readlines()
     webiste = "https://www.sjp.pl/"
-    FileUtils.truncJsonFile(dictionaryName)
+    print("\nProcessing",dictionaryName," : ...")
+    start = time.time()
     for line in lines:
         word = line
         word = word.rstrip('\n')
@@ -33,7 +37,9 @@ def fillDictionary( dictionaryName ):
         myJson["name"] = word
         myJson = modifyDictionaryPlace(myJson)
         FileUtils.printJSONToFile(myJson,dictionaryName)
-
+    end = time.time()
+    during = end - start
+    print("Fill ",dictionaryName,"\ntakes time: ",during)
 
 if __name__ == '__main__':
 
@@ -41,17 +47,30 @@ if __name__ == '__main__':
         print("Problem with sjp site, check connection to sjp.pl")
     else:
         if len(sys.argv[1:]) == 2:
-            pfsPath = str(sys.argv[1:][0])
-            sjpPath = str(sys.argv[1:][1])
+            sjpPath = str(sys.argv[1:][0])
+            sjpLine = int(subprocess.check_output(["wc", "-l", "Input/"+sjpPath]).decode("utf8").split()[0])
+            pfsPath = str(sys.argv[1:][1])
+            pfsLine = int(subprocess.check_output(["wc", "-l", "Input/"+pfsPath]).decode("utf8").split()[0])
+            print("Start to process lines: \nsjp:",sjpLine," lines\npfs:",pfsLine," lines")
             [same,pfsUnique,sjpUnique] = splitDictionariesBySimilaryAndDifference(pfsPath,sjpPath)
             FileUtils.printToFile(same,"same.txt")
             FileUtils.printToFile(pfsUnique,"pfsUnique.txt")
             FileUtils.printToFile(sjpUnique,"sjpUnique.txt")
+            sameLinesCount = int(subprocess.check_output(["wc", "-l", "Output/same.txt"]).decode("utf8").split()[0])
+            pfsUniqueCount = int(subprocess.check_output(["wc", "-l", "Output/pfsUnique.txt"]).decode("utf8").split()[0])
+            sjpUniqueCount = int(subprocess.check_output(["wc", "-l", "Output/sjpUnique.txt"]).decode("utf8").split()[0])
+            print("\nSplitted dictionaries on:\nSame in two dictionaries: ",sameLinesCount,"lines")
+            print("Unique in sjp dict: ",sjpUniqueCount," lines")
+            print("Unique in pfs dict: ",pfsUniqueCount," lines")
             fillDictionary("pfsUnique.txt")
             fillDictionary("same.txt")
             fillDictionary("sjpUnique.txt")
         if len(sys.argv[1:]) == 1:
             dictPath = str(sys.argv[1:][0])
+            dictLine = int(subprocess.check_output(["wc", "-l", "Input/"+dictPath]).decode("utf8").split()[0])
+            FileUtils.getSJPDictionary(dictPath)
+            FileUtils.printToFile(FileUtils.getSJPDictionary(dictPath),dictPath)
+            print("Start to process lines: ", dictLine)
             fillDictionary(dictPath)
 
 
